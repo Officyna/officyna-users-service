@@ -12,4 +12,6 @@ data:
   LOG_LEVEL_APP: "INFO"
   LOG_LEVEL_SECURITY: "INFO"
   DATABASE_SEED_ENABLED: "true"
+  # Complementa as flags do ENTRYPOINT (MaxRAMPercentage já definido no Dockerfile)
+  JAVA_TOOL_OPTIONS: "-XX:+ExitOnOutOfMemoryError"
 

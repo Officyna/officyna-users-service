@@ -186,7 +186,11 @@ jobs:
 
       - name: Aplicar Deployment, Service e HPA
         run: |
-          sed -i "s|image: ${IMAGE_NAME}:latest|image: ${IMAGE_NAME}:${{ needs.docker.outputs.image_tag }}|" k8s/deployment.yaml
+          # Usa a tag imutável do commit (sha-xxxxxxx, gerada pelo metadata-action com type=sha).
+          # Tags fixas como "developer" não alteram o manifesto e o Kubernetes não dispara rollout.
+          IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          echo "Imagem a ser implantada: ${IMAGE_NAME}:${IMAGE_TAG}"
+          sed -i "s|image: ${IMAGE_NAME}:latest|image: ${IMAGE_NAME}:${IMAGE_TAG}|" k8s/deployment.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/hpa.yaml
