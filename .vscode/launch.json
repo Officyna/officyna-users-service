@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ApplicationService<officyna-users-service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "br.com.officyna.ApplicationService",
+            "projectName": "officyna-users-service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
