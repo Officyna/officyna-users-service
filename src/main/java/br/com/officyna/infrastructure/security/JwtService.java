@@ -1,12 +1,14 @@
 package br.com.officyna.infrastructure.security;
 
 import br.com.officyna.domain.user.entity.User;
+import br.com.officyna.domain.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,8 +29,22 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Autowired(required = false)
+    private UserRepository userRepository;
+
+    public JwtService() {
+    }
+
+    public JwtService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     public String generateToken(UserDetails userDetails) {
-        return generateToken(userDetails, (Map<String, Object>) null);
+        User user = null;
+        if (userRepository != null && userDetails != null && userDetails.getUsername() != null) {
+            user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        }
+        return generateToken(userDetails, user);
     }
 
     public String generateToken(User user) {
