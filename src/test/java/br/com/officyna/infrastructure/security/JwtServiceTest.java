@@ -44,6 +44,55 @@ class JwtServiceTest {
     }
 
     @Test
+    @DisplayName("Deve gerar token com dados do usuário (id, name, email) nas claims a partir da entidade User")
+    void generateToken_ShouldIncludeUserClaims() {
+        UserDetails userDetails = new User(
+                "joao.silva5@macanico.com",
+                "encoded",
+                List.of(new SimpleGrantedAuthority("ROLE_MECHANIC"))
+        );
+        br.com.officyna.domain.user.entity.User user = br.com.officyna.domain.user.entity.User.builder()
+                .id("6ae7742a7ba336cf95f18102")
+                .name("João da Silva")
+                .email("joao.silva5@macanico.com")
+                .userRole(br.com.officyna.domain.user.entity.UserRole.MECHANIC)
+                .build();
+
+        String token = jwtService.generateToken(userDetails, user);
+
+        assertNotNull(token);
+        assertEquals("joao.silva5@macanico.com", jwtService.extractUsername(token));
+        assertEquals("6ae7742a7ba336cf95f18102", jwtService.extractId(token));
+        assertEquals("João da Silva", jwtService.extractName(token));
+        assertEquals("joao.silva5@macanico.com", jwtService.extractEmail(token));
+
+        Claims claims = jwtService.extractAllClaims(token);
+        assertEquals("6ae7742a7ba336cf95f18102", claims.get("id", String.class));
+        assertEquals("João da Silva", claims.get("name", String.class));
+        assertEquals("joao.silva5@macanico.com", claims.get("email", String.class));
+        assertEquals("MECHANIC", claims.get("roles", String.class));
+    }
+
+    @Test
+    @DisplayName("Deve gerar token diretamente a partir da entidade User")
+    void generateToken_DirectlyFromUserEntity() {
+        br.com.officyna.domain.user.entity.User user = br.com.officyna.domain.user.entity.User.builder()
+                .id("6ae7742a7ba336cf95f18102")
+                .name("João da Silva")
+                .email("joao.silva5@macanico.com")
+                .userRole(br.com.officyna.domain.user.entity.UserRole.MECHANIC)
+                .build();
+
+        String token = jwtService.generateToken(user);
+
+        assertNotNull(token);
+        assertEquals("joao.silva5@macanico.com", jwtService.extractUsername(token));
+        assertEquals("6ae7742a7ba336cf95f18102", jwtService.extractId(token));
+        assertEquals("João da Silva", jwtService.extractName(token));
+        assertEquals("joao.silva5@macanico.com", jwtService.extractEmail(token));
+    }
+
+    @Test
     @DisplayName("Deve retornar falso quando token pertence a outro usuário")
     void isTokenValid_ShouldReturnFalse_WhenUsernameDiffers() {
         UserDetails user1 = new User("user1@officyna.com", "pwd", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));

@@ -54,8 +54,7 @@ class AuthServiceTest {
 
     private UserDetails buildUserDetails(String email) {
         return new org.springframework.security.core.userdetails.User(
-                email, "encoded", List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-        );
+                email, "encoded", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
 
     private UsernamePasswordAuthenticationToken buildAuthentication(UserDetails userDetails) {
@@ -73,7 +72,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(buildAuthentication(userDetails));
         when(userRepository.findByEmail(normalizedEmail)).thenReturn(Optional.of(entity));
-        when(jwtService.generateToken(userDetails)).thenReturn("jwt-token-aqui");
+        when(jwtService.generateToken(userDetails, entity)).thenReturn("jwt-token-aqui");
 
         LoginResponse response = authService.login(request);
 
@@ -93,16 +92,17 @@ class AuthServiceTest {
         String normalizedEmail = "joao@email.com";
         UserDetails userDetails = buildUserDetails(normalizedEmail);
 
+        User entity = buildEntity(normalizedEmail, UserRole.ADMIN);
+
         when(authenticationManager.authenticate(any())).thenReturn(buildAuthentication(userDetails));
-        when(userRepository.findByEmail(normalizedEmail)).thenReturn(Optional.of(buildEntity(normalizedEmail, UserRole.ADMIN)));
-        when(jwtService.generateToken(userDetails)).thenReturn("token");
+        when(userRepository.findByEmail(normalizedEmail)).thenReturn(Optional.of(entity));
+        when(jwtService.generateToken(userDetails, entity)).thenReturn("token");
 
         authService.login(request);
 
         verify(authenticationManager).authenticate(
                 argThat(auth -> auth instanceof UsernamePasswordAuthenticationToken &&
-                        normalizedEmail.equals(auth.getPrincipal()))
-        );
+                        normalizedEmail.equals(auth.getPrincipal())));
     }
 
     @Test
@@ -114,7 +114,7 @@ class AuthServiceTest {
                 .thenThrow(new BadCredentialsException("Credenciais inválidas"));
 
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
-        verify(jwtService, never()).generateToken(any());
+        verifyNoInteractions(jwtService);
     }
 
     @Test
@@ -127,7 +127,6 @@ class AuthServiceTest {
         when(userRepository.findByEmail("joao@email.com")).thenReturn(Optional.empty());
 
         assertThrows(IllegalStateException.class, () -> authService.login(request));
-        verify(jwtService, never()).generateToken(any());
+        verifyNoInteractions(jwtService);
     }
 }
-

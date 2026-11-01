@@ -1,5 +1,6 @@
 package br.com.officyna.infrastructure.security;
 
+import br.com.officyna.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -7,13 +8,12 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,11 +28,51 @@ public class JwtService {
     private long expiration;
 
     public String generateToken(UserDetails userDetails) {
+        return generateToken(userDetails, (Map<String, Object>) null);
+    }
+
+    public String generateToken(User user) {
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword() != null ? user.getPassword() : "",
+                user.getUserRole() != null
+                        ? List.of(new SimpleGrantedAuthority("ROLE_" + user.getUserRole().name()))
+                        : List.of());
+        return generateToken(userDetails, user);
+    }
+
+    public String generateToken(UserDetails userDetails, User user) {
+        Map<String, Object> extraClaims = new LinkedHashMap<>();
+        if (user != null) {
+            if (user.getId() != null) {
+                extraClaims.put("id", user.getId());
+            }
+            if (user.getName() != null) {
+                extraClaims.put("name", user.getName());
+            }
+            if (user.getEmail() != null) {
+                extraClaims.put("email", user.getEmail());
+            }
+        }
+        return generateToken(userDetails, extraClaims);
+    }
+
+    public String generateToken(UserDetails userDetails, Map<String, Object> extraClaims) {
         log.info("Generating JWT token for user: {}", userDetails.getUsername());
 
-        String token = Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userDetails.getUsername())
-                .claim("roles", getRole(userDetails))
+                .claim("roles", getRole(userDetails));
+
+        if (extraClaims != null) {
+            extraClaims.forEach((key, value) -> {
+                if (value != null) {
+                    builder.claim(key, value);
+                }
+            });
+        }
+
+        String token = builder
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
@@ -63,6 +103,18 @@ public class JwtService {
         log.info("Username extracted from token: {}", username);
 
         return username;
+    }
+
+    public String extractId(String token) {
+        return extractClaim(token, claims -> claims.get("id", String.class));
+    }
+
+    public String extractName(String token) {
+        return extractClaim(token, claims -> claims.get("name", String.class));
+    }
+
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
@@ -112,8 +164,7 @@ public class JwtService {
 
     public <T> T extractClaim(
             String token,
-            Function<Claims, T> claimsResolver
-    ) {
+            Function<Claims, T> claimsResolver) {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -122,12 +173,10 @@ public class JwtService {
         log.debug("Generating JWT signing key");
 
         byte[] keyBytes = Decoders.BASE64.decode(
-                Base64.getEncoder().encodeToString(secret.getBytes())
-        );
+                Base64.getEncoder().encodeToString(secret.getBytes()));
 
         log.debug("JWT signing key generated successfully");
 
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-

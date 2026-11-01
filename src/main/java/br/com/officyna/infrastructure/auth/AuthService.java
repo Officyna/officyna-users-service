@@ -29,13 +29,12 @@ public class AuthService {
         String normalizedEmail = normalizeEmail(request.email());
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(normalizedEmail, request.password())
-        );
+                new UsernamePasswordAuthenticationToken(normalizedEmail, request.password()));
 
         User entity = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new IllegalStateException("Estado inconsistente: usuário autenticado sem registro"));
 
-        String token = jwtService.generateToken((UserDetails) authentication.getPrincipal());
+        String token = jwtService.generateToken((UserDetails) authentication.getPrincipal(), entity);
 
         return LoginResponse.builder()
                 .token(token)
@@ -51,4 +50,3 @@ public class AuthService {
         return email.toLowerCase(Locale.ROOT).trim();
     }
 }
-
