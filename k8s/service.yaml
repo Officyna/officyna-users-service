@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: officyna-users-service
+  labels:
+    app.kubernetes.io/name: officyna-users
+    app.kubernetes.io/component: api
+  namespace: officyna
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: officyna-users
+    app.kubernetes.io/component: api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+      appProtocol: http
+
