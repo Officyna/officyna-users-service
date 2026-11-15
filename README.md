@@ -21,6 +21,7 @@ Ele atua como o Identity Provider (IdP) dos colaboradores da oficina, emitindo t
 * [Variáveis de Ambiente](#-variáveis-de-ambiente)
 * [Observabilidade](#-observabilidade)
 * [Testes e Qualidade](#-testes-e-qualidade)
+  * [Evidência dos Testes no Sonar](#-evidência-dos-testes-no-sonar)
 * [CI/CD e Deploy (Kubernetes / EKS)](#-cicd-e-deploy-kubernetes--eks)
 
 ---
@@ -351,6 +352,20 @@ O projeto conta com **84 testes automatizados** cobrindo controladores REST, ser
 * O relatório HTML de cobertura é gerado em `target/site/jacoco/index.html`.
 * A regra de *check* do JaCoCo exige **cobertura mínima de 80%** nas regras de domínio e casos de uso.
 
+### 📊 Evidência dos Testes no Sonar
+
+Abaixo está o resumo da análise estática de código e cobertura de testes do **`officyna-users-service`** no **SonarCloud** (branch `main`):
+
+| Indicador | Resultado | Classificação / Meta |
+| :--- | :---: | :---: |
+| **Security (Segurança)** | 0 *Open issues* | 🟢 **A** |
+| **Reliability (Confiabilidade)** | 2 *Open issues* | 🟢 **A** |
+| **Maintainability (Manutenibilidade)** | 11 *Open issues* | 🟢 **A** |
+| **Coverage (Cobertura de Testes)** | **89.0%** (453 linhas elegíveis) | 🟢 **≥ 80% (Aprovado)** |
+| **Duplications (Duplicações)** | **0.0%** (1.9k linhas) | 🟢 **0%** |
+| **Security Hotspots** | 0 | 🟢 **Aprovado** |
+
+![alt text](image.png)
 ---
 
 ## ☁️ CI/CD e Deploy (Kubernetes / EKS)
